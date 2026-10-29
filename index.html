@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work Command Center · Tani</title>
+<style>
+:root{
+  --paper:#f6f1e7; --card:#fffdf8; --ink:#1d2340; --muted:#6b6a78; --line:#e3dccd;
+  --red:#d6453d; --red-bg:#fbe7e3; --amber:#d9971f; --amber-bg:#fbf0d9; --green:#3e8a5f; --green-bg:#e3f1e7;
+  --moon:#3b4a9a; --moon-bg:#e8eaf7;
+  --display:"Iowan Old Style","Charter","Palatino","Georgia",serif;
+  --body:"Avenir Next","Avenir","Gill Sans","Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;
+  background-image:radial-gradient(circle at 1px 1px, rgba(29,35,64,.07) 1px, transparent 0);background-size:22px 22px;
+  padding-bottom:96px}
+.wrap{max-width:1240px;margin:0 auto;padding:32px 28px 40px}
+@media(max-width:700px){.wrap{padding:22px 16px 30px}}
+header{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:16px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,42px);margin:0;letter-spacing:-.5px}
+h1 span{font-style:italic;color:var(--moon)}
+.sub{color:var(--muted);margin-top:4px}
+.dates{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.date{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;max-width:290px}
+.date b{display:block;font-family:var(--display);font-size:14.5px;margin-bottom:2px}
+.tabs{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
+.tab{font:inherit;font-family:var(--display);font-size:17px;border:1px solid var(--line);border-bottom:none;background:transparent;color:var(--muted);padding:8px 18px;border-radius:12px 12px 0 0;cursor:pointer}
+.tab.on{background:var(--card);color:var(--ink);font-weight:600}
+.tab .n{font-family:var(--body);font-size:12px;opacity:.7;margin-left:4px}
+.view{background:var(--card);border:1px solid var(--line);border-radius:0 14px 14px 14px;padding:20px 22px}
+.next{background:var(--ink);color:#fdf8ec;border-radius:14px;padding:16px 20px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;margin-bottom:18px}
+.next .lbl{font-family:var(--display);font-style:italic;font-size:19px;color:#c9cff5}
+.next ol{margin:0;padding-left:20px}.next li{margin:2px 0}
+@media(max-width:700px){.next{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi .n{font-family:var(--display);font-size:32px;font-weight:600;line-height:1}
+.kpi .t{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
+.kpi::after{content:"";position:absolute;right:-16px;top:-16px;width:60px;height:60px;border-radius:50%;opacity:.18}
+.kpi.r::after{background:var(--red)}.kpi.a::after{background:var(--amber)}.kpi.g::after{background:var(--green)}.kpi.m::after{background:var(--moon)}
+.bar{height:6px;border-radius:4px;background:var(--line);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);transition:width .4s}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 13px;cursor:pointer;font:inherit;font-size:13px;color:var(--ink)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+input[type=search]{flex:1;min-width:180px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font:inherit;color:var(--ink)}
+.grid{columns:2;column-gap:16px}
+@media(max-width:900px){.grid{columns:1}}
+.grid .sec{break-inside:avoid;margin-bottom:16px;display:inline-block;width:100%}
+.grid details>summary{cursor:pointer;list-style:none;user-select:none}
+.grid details>summary::-webkit-details-marker{display:none}
+.grid details>summary h2{display:flex;align-items:center;gap:8px}
+.grid details>summary h2::after{content:"▾";margin-left:auto;font-size:14px;color:var(--mute);transition:transform .2s}
+.grid details:not([open])>summary h2::after{transform:rotate(-90deg)}
+.grid details:not([open])>summary h2 .c{display:none}
+.grid details[open]>summary{margin-bottom:10px}
+@media(max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0}
+.sec.wide{grid-column:1/-1}
+.sec h2{font-family:var(--display);font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.sec h2 .c{font-family:var(--body);font-size:12px;background:var(--moon-bg);color:var(--moon);border-radius:999px;padding:2px 9px;font-weight:600}
+.sec .hint{color:var(--muted);font-size:12px;margin-bottom:10px}
+.task{display:grid;grid-template-columns:22px 12px minmax(0,1fr);gap:10px;align-items:start;padding:9px 4px;border-top:1px dashed var(--line)}
+.task:first-of-type{border-top:none}
+.task input{width:17px;height:17px;margin-top:2px;accent-color:var(--green);cursor:pointer}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:5px}
+.dot.r{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.dot.a{background:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+.dot.g{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.who{font-weight:600}
+.what{margin-top:1px}
+.meta{color:var(--muted);font-size:12.5px;margin-top:3px}
+.task.done .who,.task.done .what{text-decoration:line-through;opacity:.45}
+.task.done .meta{opacity:.45}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+@media(max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.dry{width:100%;border-collapse:collapse;font-size:13px}
+.dry th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:6px}
+.dry td{padding:7px 6px;border-bottom:1px dashed var(--line);vertical-align:top}
+.dry tr.done td{opacity:.4}
+.dry tr.done .cli{text-decoration:line-through}
+.dry input{accent-color:var(--green);width:16px;height:16px;cursor:pointer}
+.upl{display:inline-block;font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 7px;background:var(--green-bg);color:var(--green);margin-left:6px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0;margin-top:12px;font-size:14px;line-height:1.6;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.note h1{font-family:var(--display);font-size:22px;margin:14px 0 8px}
+.note h2{font-family:var(--display);font-size:16.5px;margin:16px 0 6px;color:#7a4d00;border-bottom:1px dashed #e0c9a0;padding-bottom:4px}
+.note h3{font-size:14.5px;margin:14px 0 4px;font-weight:700}
+.note p{margin:6px 0}
+.note hr{border:none;border-top:1px solid #e0c9a0;margin:12px 0}
+.note ul,.note ol{margin:4px 0 8px 22px}
+.note li{margin:3px 0}
+.note .stamp{margin-top:10px;color:var(--muted);font-size:12px}
+.done-list{margin:0;padding-left:18px}.done-list li{margin:4px 0}
+button.gold{border:0;border-radius:999px;padding:10px 18px;background:var(--green);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button.gold:disabled{opacity:.5}
+.foot{margin-top:22px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.due{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:1px 7px;white-space:nowrap}
+.due.late{background:var(--red);color:#fff}.due.soon{background:var(--red-bg);color:var(--red)}.due.ok{background:var(--paper);color:var(--muted)}
+.hide{display:none!important}
+.notesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start}
+.noteCard{--rot:0deg; position:relative;border-radius:4px;padding:14px 16px 12px;min-height:120px;
+  background:var(--np,#fff9c4);color:#4a4520;box-shadow:0 6px 14px -6px rgba(60,50,10,.4), 0 1px 0 rgba(255,255,255,.6) inset;
+  transform:rotate(var(--rot));transition:transform .18s, box-shadow .18s;cursor:default}
+.noteCard:hover{transform:rotate(0deg) scale(1.02);box-shadow:0 10px 22px -8px rgba(60,50,10,.5);z-index:2}
+.noteCard::before{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:44px;height:14px;
+  background:rgba(255,255,255,.5);border:1px solid rgba(120,100,40,.18);box-shadow:0 2px 4px rgba(60,50,10,.18)}
+.noteCard .ttl{font-family:var(--display);font-weight:600;font-size:16px;margin:0 26px 6px 0;border:none;background:transparent;color:inherit;width:calc(100% - 26px);outline:none}
+.noteCard .ttl::placeholder{color:rgba(74,69,32,.4)}
+.noteCard .txt{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:none;min-height:40px}
+.noteCard .txt:empty::before{content:"Escribe aquí…";color:rgba(74,69,32,.35)}
+.noteCard .pin{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(74,69,32,.12);cursor:pointer;font-size:11px;display:grid;place-items:center;color:rgba(74,69,32,.65)}
+.noteCard .pin:hover{background:var(--red);color:#fff}
+.noteCard .when{color:rgba(74,69,32,.5);font-size:10.5px;margin-top:8px}
+.noteCard.n0{--np:#fff9c4;--rot:-1.2deg}
+.noteCard.n1{--np:#ffd9a8;--rot:.8deg}
+.noteCard.n2{--np:#d4f0c0;--rot:-.6deg}
+.noteCard.n3{--np:#cfe8ff;--rot:1deg}
+.noteCard.n4{--np:#f6d4e0;--rot:-.9deg}
+.bnum{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:600;flex:none;margin-top:2px}
+.task.briefRow{grid-template-columns:22px minmax(0,1fr)}
+.briefHot{border-left:3px solid #d64545;padding-left:8px}
+.xref{font-size:11px;opacity:.65;border:1px solid var(--line);border-radius:8px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.agentBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.agentBar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 16px;cursor:pointer}
+.agentBar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chatFrame{position:relative;height:calc(100vh - 220px);min-height:420px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.chatFrame iframe{width:100%;height:100%;border:0;display:block}
+.frameFail{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--card)}
+.ffCard{text-align:center;max-width:380px;padding:20px;border:1px dashed var(--line);border-radius:14px}
+.composer{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(transparent,var(--paper) 35%);padding:16px 28px 14px;z-index:9;transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s}
+.composer.hide{transform:translateY(120%);opacity:0;pointer-events:none}
+.composer .in{max-width:1240px;margin:0 auto;display:flex;gap:8px}
+.composer input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:11px 16px;font:inherit;color:var(--ink)}
+.composer button{border:0;border-radius:999px;padding:11px 20px;background:var(--moon);color:#fff;font:inherit;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Work <span>Command Center</span> 🌙</h1>
+    <div class="sub" id="sub">cargando datos vivos…</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+    <button id="chatToggle" title="Escríbele a Elowen" style="border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;cursor:pointer;font:inherit">💬 Escríbele a Elowen</button>
+    <div class="dates" id="dates"></div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" data-v="brief">🌅 Brief<span class="n" id="nBr"></span></button>
+  <button class="tab" data-v="tasks">📋 Tasks<span class="n" id="nT"></span></button>
+  <button class="tab" data-v="camp">🍄 Prospects<span class="n" id="nC"></span></button>
+  <button class="tab" data-v="billing">💰 Billing<span class="n" id="nB"></span></button>
+  <button class="tab" data-v="agents">💬 Agents</button>
+  <button class="tab" data-v="notifs">🔔 Notifications<span class="n" id="nNf"></span></button>
+  <button class="tab" data-v="notes">🗒 Notas<span class="n" id="nN"></span></button>
+</nav>
+
+<div class="view" id="view-brief">
+  <div class="kpis" id="brKpis"></div>
+  <div class="note wide" id="briefNote"></div>
+  <div class="sec wide">
+    <h2>🎙️ Debriefs pendientes</h2>
+    <div class="hint">Tacha las que ya capturamos o ya no quieres · las quito en automático.</div>
+    <div id="dbList"></div>
+  </div>
+</div>
+
+<div class="view hide" id="view-tasks">
+  <div class="next" id="nextBox"></div>
+  <div class="kpis">
+    <div class="kpi r"><div class="n" id="k-r">0</div><div class="t">🔴 Te necesitan ya</div></div>
+    <div class="kpi a"><div class="n" id="k-a">0</div><div class="t">🟡 Se están poniendo viejas</div></div>
+    <div class="kpi m"><div class="n" id="k-camp">0</div><div class="t">🍄 Lanes secas</div></div>
+    <div class="kpi g"><div class="n" id="k-done">0</div><div class="t">✓ Marcadas hoy</div><div class="bar"><i id="k-bar" style="width:0"></i></div></div>
+  </div>
+  <div class="toolbar">
+    <button class="chip on" data-f="all">Todas</button>
+    <button class="chip" data-f="r">🔴 Urgentes</button>
+    <button class="chip" data-f="a">🟡 Envejeciendo</button>
+    <button class="chip" data-f="g">🟢 En curso</button>
+    <input type="search" id="q" placeholder="Buscar cliente o tarea…">
+    <button class="chip" id="reset" title="Desmarca todo">↺ Reiniciar marcas</button>
+  </div>
+  <div class="grid" id="sections"></div>
+</div>
+
+<div class="view hide" id="view-camp">
+  <div class="kpis">
+    <div class="kpi m"><div class="n" id="kc-open">0</div><div class="t">🍄 Sin prospectos</div></div>
+    <div class="kpi g"><div class="n" id="kc-up">0</div><div class="t">⬆ Prospectos subidos</div></div>
+    <div class="kpi g"><div class="n" id="kc-rev">0</div><div class="t">✓ Revisadas</div></div>
+  </div>
+  <div class="sec wide">
+    <h2>🍄 Prospects sin cargar <span class="c" id="campCount"></span></h2>
+    <div class="hint">Seguimiento de Puck · tacha las que ya revisaste, marca ⬆ cuando subas fuel.</div>
+    <div style="overflow-x:auto"><table class="dry" id="dry"></table></div>
+    <div class="note">⚠️ <b>Lección de Puck:</b> los restocks duran unos 5 a 6 días hábiles. Revisa el volumen de fuel contra el ritmo de envíos antes de rellenar.</div>
+  </div>
+</div>
+
+<div class="view hide" id="view-billing">
+  <div class="kpis" id="bKpis"></div>
+  <div class="sec wide">
+    <h2>💰 Cuentas con fecha <span class="c" id="bCount"></span></h2>
+    <div class="hint">Marca la casilla cuando quede resuelto · me llega y actualizo el Doc.</div>
+    <div id="bList"></div>
+  </div>
+</div>
+
+<div class="view hide" id="view-notifs">
+  <div class="kpis">
+    <div class="kpi r"><div class="n" id="kn-r">0</div><div class="t">🔔 Sin revisar</div></div>
+    <div class="kpi g"><div class="n" id="kn-g">0</div><div class="t">✓ Revisadas</div></div>
+    <div class="kpi m"><div class="n" id="kn-t">0</div><div class="t">📌 Total</div></div>
+  </div>
+  <div id="notifList"></div>
+</div>
+
+<div class="view hide" id="view-agents">
+  <p class="hint" style="margin:0 0 10px;color:var(--muted);font-size:13px">Chats reales · con la extensión Luma Bubble activa se ven aquí dentro. Sin ella, tócalos y se abren en su pestaña.</p>
+  <div class="agentBar" id="agentBar"></div>
+  <div class="chatFrame" id="chatFrameWrap">
+    <iframe id="chatFrame" title="Chat de agente" referrerpolicy="no-referrer"></iframe>
+    <div class="frameFail" id="frameFail" style="display:none">
+      <div class="ffCard">
+        <div style="font-size:30px">🫧</div>
+        <b id="ffName">Este chat no se pudo embeber</b>
+        <p style="margin:6px 0 12px;color:var(--muted);font-size:13px">Con la <b>extensión Luma Bubble</b> activa se ve aquí mismo. Sin ella, ábrelo directo:</p>
+        <div id="ffLinks" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view hide" id="view-notes">
+  <p class="hint" style="margin:0 0 12px;color:var(--muted);font-size:13px">Notas rápidas para ti · viven en este navegador, solo tuyas. ✕ las borra para siempre.</p>
+  <div class="notesGrid" id="notesGrid"></div>
+</div>
+
+<p class="foot"><span>Tus marcas se guardan en este navegador y me llegan por el buzón · el Doc sigue siendo la fuente de verdad</span><span id="footFresh"></span></p>
+</div>
+
+<div class="composer hide" id="composer"><div class="in">
+  <input id="say" placeholder="Escríbele a Elowen…">
+  <button id="send">Enviar</button>
+</div></div>
+<script>window.__INJECT__NOTIFJ={"run": "2026-10-30", "cards": [{"id": "purple-brain-oct31", "kind": "launch_deadline", "title": "⏰ Purple Brain — deadline TOMORROW (Sat Oct 31)", "body": "No Zeus account (exhaustive search Fri Oct 30), no campaigns, nothing to launch · sheet still says PAUSED while deadline says launch + MRR $50→$1,000 · flag open since Sep 25. Decide today: launch-ready or re-date."}, {"id": "brian-cope-walkin-brief", "kind": "meeting_brief", "title": "📝 Brian Cope walk-in brief (11:30 HOY)", "body": "Verified Stripe: invoice 9FKXZUPZ-0001, $1,000 PAID Oct 6 · sub sub_1UNdKq2sbFU2W5GmdpvHtyFR ACTIVE · next charge Nov 6 (cliff — cancel BEFORE it). Timeline: demand EOD Oct 22 → re-demanded Oct 27 (AM-provided). Meeting asks: refund = Mike's lane · commit today: cancel sub before Nov 6 + concrete refund date."}, {"id": "brian-cope-stripe-located", "kind": "el_lowen_finding", "title": "🔎 Motif = Brian J Cope — LOCATED in Stripe", "body": "$1,000 paid Oct 6 (invoice in_1UNdKq2sbFU2W5Gmm8yR3qY4) · sub ACTIVE, next period ends Nov 6 · Meeting with Mireya TODAY 11:30 MX. Walk in with: invoice #+date. Ask: cancel sub before Nov 6 if refund proceeds; commit a refund date. Refund lane = Mike."}, {"id": "circle2learn-unprovisioned", "kind": "stall", "title": "🟡 Circle2Learn · 12+ días hábiles post KOC sin Zeus", "body": "KOC hecho, pago confirmado, MW confirmado por Tani el 6 oct. Sin cuenta Zeus en ningún lado (búsqueda exhaustiva, incluye archivados). Lead list, emails y aprobaciones: sin empezar.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28"}, {"id": "cpp-unprovisioned", "kind": "stall", "title": "🟡 CP&P Development · 27+ días hábiles post KOC sin Zeus", "body": "Sin cuenta Zeus ni MW propio: la hoja apunta al doc de Enterprise Group, probable error de copia.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28"}, {"id": "davis-apex-unprovisioned", "kind": "stall", "title": "🟡 Davis Apex Strategies · 17+ días hábiles post KOC sin Zeus", "body": "Sin cuenta Zeus ni MW en la hoja.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28"}, {"id": "delirium-unprovisioned", "kind": "stall", "title": "🟡 Delirium Media · 11+ días hábiles post KOC sin Zeus", "body": "Sin cuenta Zeus y el campo PIQ Email está vacío en la hoja: no hay nada contra qué buscar.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28"}, {"id": "enterprise-group-no-build", "kind": "stall", "title": "🔴 Enterprise Group · 31+ días hábiles post KOC sin build", "body": "Solo 3 campañas de muestra en PIQ; el build real nunca llegó. Neil aprobó todo el 1 oct. Es el estancamiento más largo del runway.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28"}, {"id": "fm-2026-w43", "kind": "fm_reporting", "week": "Oct 19–23", "title": "📊 FM Reporting complete — Week Oct 19–23", "body": "Updated: 19 of 21 active clients · Validation PASS · Meetings: 0 (verified)\nExceptions: Central Tape historical block hand-edited (awaiting Tani) · SODP silent since Oct 19 · Titan 1 send · Rivalmind 0 (2nd week) · Wisteria paused since Oct 15 · HVO paused (intentional, per Tani) · NorthStar/Check Plus/LabotBiank blank (no PIQ) · no sdr- channels for BDM/SODP/Seaside.", "next_run": "Mon Nov 2", "posted": "2026-10-28"}, {"id": "labotbiank-parked", "kind": "stall", "title": "⚪ LabotBiank · esperando al cliente", "body": "Campañas construidas (C1# Services-CA y VL) y 10 senders sanos, pero 0 leads subidos desde siempre. Tani lo marca en espera del cliente: en pausa, silencio salvo cambio material.", "next_run": "solo si algo cambia", "posted": "2026-10-28"}, {"id": "purple-brain-deadline", "kind": "delay", "title": "⏰ Purple Brain: deadline sáb Oct 31 — SIN provisionar", "body": "Deadline sáb Oct 31 (2 días) · nada provisionado en Zeus. ⚠️ Contradicción a resolver: el deadline exige launch + MRR raise $50→$1,000, pero el sheet aún marca la cuenta como PAUSED. Viernes = último checkpoint antes del sábado.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-29"}, {"id": "sodp-mailboxes", "kind": "stall", "title": "✅ RESUELTO: SODP mailboxes de vuelta (Oct 29, 9:00 run)", "body": "10 de 21 conectados (lane persona sofia/sford), envíos reanudados hoy (5 por mailbox). Campañas activas: CA 1,478 pending/232 contacted · VL 1,516/308 · 4 replies. La tarjeta del 21-25 queda resuelta.", "next_run": "mañana 9:00 CDMX", "posted": "2026-10-28", "resolved": true}]};</script>
+<script>window.__INJECT__BRIEFJ={"morning": [{"t": "🔴 1. Closer / Juan — cancel HOY. El cargo de ~$1,200 se arma hoy 19:21 UTC y sigue SIN cancel en Stripe. Juan pide confirmación escrita desde Oct 6. Ejecutar + confirmar por escrito.", "m": "🔴 dinero · ver URGENT 1"}, {"t": "🔴 2. Motif / Brian — refund. Exige fecha concreta (\"If it hasn't been issued yet, please tell me today when it will be\"). Su EOD es viernes Oct 30, y hay lenguaje de amenaza legal. Falta localizar el billing name real en Stripe (lane Mike).", "m": "🔴 dinero · ver URGENT 2"}, {"t": "🔴 3. CTL / Tim — confirmación escrita de cancel, ya 3 nudges de retraso. Prometiste \"tomorrow morning\" lunes; su última fue martes 8:21am: \"Please confirm that the account has been cancelled.\"", "m": "🔴 dinero · ver URGENT 3"}, {"t": "🟡 4. CheckPlus / Aaron nudged ayer 4:09pm (\"any news?\") — el payment link de $1,000 prometido Oct 24 nunca se envió. Mandarlo hoy, CC Asher Kest.", "m": "🟡 · ver TODAY 4"}, {"t": "🟡 5. SODP / Vahe — mañana jueves 12:30 es su llamada; el must-fix son las 21 mailboxes disconnected desde ~Oct 21. Si Rook no lo resolvió ayer, es el bloqueador de la llamada.", "m": "🟡 · mañana 12:30"}, {"t": "⚪ Contexto nuevo: ETG / Neil pidió PAUSA (kickoff → enero 2027) y sacó su marketing list (2 veces, sin resolver). Decisión pendiente tuya/Mireya.", "m": "⚪ · ver ESCALATIONS 7"}, {"t": "⚪ Contexto nuevo: Weekly reports muertos como clase (\"ya es ley\") — ya no se siguen como deuda. Solo queda la lane de notificaciones FM.", "m": "⚪"}, {"t": "📝 Briefs de hoy: CP&P (Gerald) 11:00 · Theo-Linkedin (Cinn Barr) 11:30 · Living Medicine (Sandy) 13:00 — con talking points completos en el chat del brief.", "m": "hoy · calendario"}], "pending_debriefs": [], "brief_date": "Mié Oct 28 (réplica verbatim del morning brief 8:15am MX)", "note": "Buenos días, Tani 🌿 Combo del miércoles (8:15am MX), todo fresco. La lección de ayer aplicada: calendario revisado a fondo, y hoy SÍ hay tres juntas de clientes.\n\n# 🌅 MORNING BRIEF — Wednesday Oct 28\n\n## 🔴 Urgente — decisiones de dinero (AM Sync 12:00)\n1. **Closer / Juan — cancel HOY.** El cargo de ~$1,200 se arma hoy 19:21 UTC y sigue SIN cancel en Stripe. Juan pide confirmación escrita desde Oct 6. Ejecutar + confirmar por escrito.\n2. **Motif / Brian — refund.** Exige fecha concreta (\"If it hasn't been issued yet, please tell me today when it will be\"). Su EOD es **viernes Oct 30**, y hay lenguaje de amenaza legal. Falta localizar el billing name real en Stripe (lane Mike).\n3. **CTL / Tim — confirmación escrita de cancel, ya 3 nudges de retraso.** Prometiste \"tomorrow morning\" lunes; su última fue martes 8:21am: \"Please confirm that the account has been cancelled.\"\n\n## 🟡 Hoy también\n4. **CheckPlus / Aaron** nudged ayer 4:09pm (\"any news?\") — el payment link de $1,000 prometido Oct 24 nunca se envió. Mandarlo hoy, CC Asher Kest.\n5. **SODP / Vahe** — mañana jueves 12:30 es su llamada; el must-fix son las **21 mailboxes disconnected** desde ~Oct 21. Si Rook no lo resolvió ayer, es el bloqueador de la llamada.\n\n## ⚪ Contexto nuevo\n- **ETG / Neil pidió PAUSA**: kickoff → enero 2027, y sacó su marketing list (2 veces, sin resolver). Decisión pendiente tuya/Mireya.\n- **Weekly reports: muertos como clase** (\"ya es ley\") — ya no los sigo como deuda. Solo queda la lane de notificaciones FM.\n\n## 📝 Briefs de HOY\n\n---\n\n### 📝 Brief 1 — CP&P Development (Gerald) — 11:00am MX\n**Quién/por qué:** kickoff de octubre quedó verificado enviado (~1:48am Oct 8: emails + recap). Gerald es de los que promete y se atraviesa: respondió Oct 9 que viajaba, Oct 14 pidió horarios, y el launch sigue sin concretar. Ayer en Accounts Review quedó pendiente su debrief (mencionado, nunca capturado).\n**Dónde está:** no hay respuesta reciente suya confirmada; el launch es la cosa abierta.\n**Compromisos abiertos:** él → confirmar reunión/avanzar launch; tú → recap ya enviado (verificado).\n**Riesgos:** patrón de silencios largos; si otra vez no aparece, fijar fecha concreta o pedirle decidir.\n**Hablar de:** 1) estado del launch y qué falta, 2) fijar fecha de lanzamiento concreta HOY, 3) si pide cambios, cuáles exactamente, 4) si no hay movimiento, proponer cerrar o re-agendar con deadline.\n\n### 📝 Brief 2 — Theo-Linkedin (Cinn Barr) — 11:30am MX\n**Quién/por qué:** Theo es el call-asker persistente desde Sep 21; su llamada de ayer 10am MX ocurrió pero **el outcome nunca se capturó**. Este espacio de 11:30 es \"Theo-Linkedin\" — probablemente la parte de LinkedIn que se acordó ayer.\n**Deuda tuya:** su **progress report desde Sep 21 = 5 semanas** (encontrado ayer por el midday catch-up). Ese es el pendiente más viejo del account.\n**Riesgo:** si el reporte no sale antes de hablar con él, es la primera pregunta que va a hacer.\n**Hablar de:** 1) qué quedó acordado ayer (recuperarlo del debrief), 2) entregar el progress report ya, 3) mover el pago Nov 24→Dec 15 si aplica (está en CARRIED OVER), 4) próximos pasos de LinkedIn.\n\n### 📝 Brief 3 — Living Medicine Institute (Sandy) — 1:00pm MX\n**Quién/por qué:** Sandy ha empujado 3+ veces por sus actualizaciones prometidas (\"continuing to look forward to getting the promised progress updates\"). Cadencia pactada: in-depth review cada ~3 semanas en lugar de weekly — y **cero reviews in-depth desde el launch Aug 31**.\n**Dónde está:** ~1,075 contactados (~24 días), 29 replies (VL 18, CA 11). ⚠️ No citar opens de CA: el tracking está apagado en ese mailbox (diagnosticado, no es problema del cliente).\n**Compromisos abiertos:** tu \"separate update shortly\" (Sep 23) sigue vivo; hay un draft de respuesta esperando tu go. Copy-fix: venue cambió, dates no; Step 1 rewrite HELD esperando su respuesta del próximo target.\n**Hablar de:** 1) entregar el in-depth review prometido (esta llamada ES la oportunidad), 2) confirmar próximo target para destrabar el Step 1, 3) la entrada de LinkedIn que mencionaste ayer para ella (retiros convierten mejor por ahí), 4) fijar la próxima fecha de review en calendario.\n\n---\n\n👉 **Next action:** en el AM Sync de las 12:00 cerrar las tres decisiones de dinero juntas — cancel de Closer antes del cargo de esta tarde, fecha de refund de Motif, confirmación escrita de CTL con billing truth. Lo demás puede esperar.\n\nDrafts para tu OK, nada se postea sin tu palabra 🌿", "note_date": "mié Oct 28, 8:15am MX", "design_locked": "note-card-only (white .sec card, mdLite render, debriefs below). No morning list section. Locked by Tani Oct 28."};</script>
+<script>window.__INJECT__CAL=[{"title": "CP&P Development", "start": "2026-10-28T11:00:00-06:00", "end": "2026-10-28T11:30:00-06:00", "when": "mié 28 oct · 11:00", "past": false}, {"title": "Theo- Linkedin", "start": "2026-10-28T11:30:00-06:00", "end": "2026-10-28T12:00:00-06:00", "when": "mié 28 oct · 11:30", "past": false}, {"title": "Bi-weekly PersistIQ Account Manager Sync", "start": "2026-10-28T12:00:00-06:00", "end": "2026-10-28T12:45:00-06:00", "when": "mié 28 oct · 12:00 PT", "past": false}, {"title": "Living Medicine Institute", "start": "2026-10-28T13:00:00-06:00", "end": "2026-10-28T13:30:00-06:00", "when": "mié 28 oct · 13:00", "past": false}, {"title": "Vahe Arabian and Tania Gonzalez", "start": "2026-10-29T12:30:00-06:00", "end": "2026-10-29T13:00:00-06:00", "when": "jue 29 oct · 12:30", "past": false}, {"title": "Company Meeting", "start": "2026-10-30T13:30:00-06:00", "end": "2026-10-30T14:00:00-06:00", "when": "vie 30 oct · 13:30 ET", "past": false}, {"title": "Tania / Mireya 1on1", "start": "2026-10-30T14:30:00-06:00", "end": "2026-10-30T15:00:00-06:00", "when": "vie 30 oct · 14:30 PT", "past": false}, {"title": "Meeting Seaside S. Update", "start": "2026-11-03T13:00:00-06:00", "end": "2026-11-03T13:30:00-06:00", "when": "mar 3 nov · 13:00", "past": false}, {"title": "Tania's Accounts Review", "start": "2026-11-03T15:15:00-06:00", "end": "2026-11-03T16:00:00-06:00", "when": "mar 3 nov · 15:15 PT", "past": false}];</script>
+<script>window.__INJECT__DATA={"SNAPSHOT": "Docs leídos en vivo", "EVENTS": [["Mié 28 · 12:00 pm", "AM Sync: las 3 decisiones de dinero"], ["Mié 28 · 19:21 UTC", "Cargo de ~$1,200 a Closer"], ["Jue 29 · 12:30 MX", "Llamada con Vahe"]], "TASK_SECTIONS": [{"id": "urg", "icon": "🔴", "title": "Urgente: dinero", "sub": "Las tres se cierran en el AM Sync de mañana.", "items": [{"n": "Closer / Juan", "t": "Ejecutar el cancel y mandar confirmación escrita (la pide desde el 6 oct)", "tags": ["dinero"], "m": "Cargo de ~$1,200 MAÑANA mié 19:21 UTC · cancel SIN setear (Rook verificó mar 8:15 am)", "dot": "r"}, {"n": "Motif / Brian Cope", "t": "Decidir el refund de $1,000 y comprometer una fecha", "tags": ["dinero"], "m": "Deadline vencido el 22 oct · sin match en Stripe · lane de Mike", "dot": "r"}, {"n": "CTL / Tim", "t": "Confirmación escrita de cancelación y billing truth (¿se cobró octubre?)", "tags": ["dinero"], "m": "Prometiste \"tomorrow morning\" (lun) · 4 nudges · él ya lo está comunicando a terceros", "dot": "r"}]}, {"id": "esc", "icon": "⚠️", "title": "Escalations abiertas", "sub": "Clientes que ya escalaron o esperan respuesta formal.", "items": [{"n": "BPI / Chris Sewell", "t": "Confirmación escrita, accounting ack y ruling del cargo de sept", "tags": ["escalation"], "m": "Venció el vie 23 oct · NPS 1 · cargo del 17 oct sin verificar", "dot": "r", "done": true}, {"n": "DFS / Dave", "t": "Responder su escalamiento y conseguir un método de pago nuevo", "tags": ["escalation", "dinero"], "m": "Escaló vía Greg el 23 oct · $2,500 en facturas abiertas", "dot": "r"}, {"n": "ECS / Jeff", "t": "Confirmación escrita del cancel y refund de $750", "tags": ["escalation", "dinero"], "m": "Más de 10 días · ventana holgada (fuera de campo del 26 al 30 oct)", "dot": "a"}, {"n": "ETG / Neil", "t": "Decidir si aceptas la pausa hasta enero (~7 ene) y reenviar la lista del first batch", "tags": ["decisión"], "m": "Pausa pedida el martes · aún no lanzan oficialmente", "dot": "a"}]}, {"id": "hoy", "icon": "🟡", "title": "Hoy: fast wins", "sub": "Además de los 3 urgentes de dinero.", "items": [{"n": "CheckPlus / Aaron", "t": "Mandar el LINK DE PAGO de $1,000 y responder sus 2 preguntas", "tags": ["dinero"], "m": "Nudge del martes: \"any news?\" · sub PAST_DUE", "dot": "a"}, {"n": "Circle2Learn / Sahar", "t": "Responder su \"delays… need to see progress\" y preguntar el techo de contacts por escuela", "tags": ["cliente"], "m": "", "dot": "a"}, {"n": "Raman / Titan", "t": "Confirmar el launch (0 pending en las lanes indica que NO se ha lanzado) o fijar fecha", "tags": ["launch"], "m": "", "dot": "a"}, {"n": "Vahe (prep)", "t": "Plan de mailbox-fix y fecha de reactivación (2,184 pending)", "tags": ["prep"], "m": "Llamada jue 29 oct, 12:30", "dot": "a"}]}, {"id": "deb", "icon": "📄", "title": "Debrief: Accounts Review con Mireya", "sub": "27 oct · acciones aprobadas por Tani.", "items": [{"n": "Drafts", "t": "Enviar los dos drafts (intento de cancel y refund de Motif) con tu ok", "tags": ["hoy"], "m": "Hoy", "dot": "n"}, {"n": "Sahar", "t": "Preguntarle el techo de contacts", "tags": ["hoy"], "m": "Hoy", "dot": "n"}, {"n": "Circle2Learn", "t": "Rehacer las listas (red/orange/yellow primero, cross-match)", "tags": ["hoy"], "m": "Hoy · owner: Atlas", "dot": "n"}, {"n": "Reunión del jueves", "t": "Confirmar la reunión a 3 bandas (mandar invite hoy)", "tags": ["hoy"], "m": "Hoy", "dot": "n"}, {"n": "Marlon", "t": "Perseguir los mailboxes para hoy o mañana", "tags": ["semana"], "m": "Esta semana", "dot": "n"}, {"n": "Living Medicine", "t": "Agendar llamada con Sandy (moverla a LinkedIn)", "tags": ["semana"], "m": "Esta semana", "dot": "n"}, {"n": "Panda Planner", "t": "Usarlo, recolectar feedback y pasarlo a Andrés", "tags": ["semana"], "m": "Esta semana", "dot": "n"}, {"n": "Claude", "t": "Revisar los screenshots de la UI cuando estén", "tags": ["semana"], "m": "Esta semana", "dot": "n"}, {"n": "Lapot", "t": "Follow-up de materiales", "tags": ["en curso"], "m": "En curso", "dot": "n"}, {"n": "CP client", "t": "La bola está en su cancha", "tags": ["en curso"], "m": "En curso", "dot": "n"}]}, {"id": "arr", "icon": "♻️", "title": "Arrastradas: pendientes sin confirmar", "sub": "Se conservan hasta que digas que están hechas. Ordenadas por antigüedad.", "items": [{"n": "Labot / Randall", "t": "Lista revisada y respuesta a su feedback", "tags": [], "m": "Desde el 4 sep · nudge 23 sep", "dot": "n"}, {"n": "Chorus / Clint", "t": "Backfill de 2,000 leads", "tags": [], "m": "Desde el 22 sep", "dot": "n"}, {"n": "Closer / Juan", "t": "Email confirmando sus 3 puntos", "tags": [], "m": "Desde el 22 sep", "dot": "n"}, {"n": "Paptic", "t": "Credit notes (lane de finance)", "tags": [], "m": "Desde el 25 sep", "dot": "n"}, {"n": "Tess Woods", "t": "3 decisiones del doc contaminado y audit draft", "tags": [], "m": "Desde ~25 sep", "dot": "n"}, {"n": "AAAHAR / Brad", "t": "Emails extra BDMX y Enterprise · emails y LL de Davis Apex", "tags": [], "m": "Desde el 6 oct", "dot": "n"}, {"n": "Labot (interno)", "t": "Decidir: ¿firma Randall o una persona SDR?", "tags": ["decisión"], "m": "Desde el 6 oct", "dot": "n"}, {"n": "Raman / Titan", "t": "Responder \"cómo veo los replies\"", "tags": [], "m": "Desde el 12 oct", "dot": "n"}, {"n": "Seaside / Zack", "t": "Weekly Report #1", "tags": [], "m": "Desde el 20 oct", "dot": "n"}, {"n": "HVO / Ari", "t": "Lista nueva de leads (prometida vie a lun)", "tags": [], "m": "20 a 26 oct · 2 nudges", "dot": "n"}, {"n": "Living Medicine / Sandy", "t": "Responder su thread de scheduling", "tags": [], "m": "Desde el 20 oct · tercer nudge", "dot": "n"}, {"n": "Paper World / Ron", "t": "Nudge de la proposal", "tags": [], "m": "Desde el 20 oct", "dot": "n"}, {"n": "Wisteria / Scott", "t": "Responder el pivot a LinkedIn y los términos del wind-down", "tags": [], "m": "Desde el 21 oct", "dot": "n"}, {"n": "CTP / Gerald", "t": "Nudge (4 días de silencio)", "tags": [], "m": "21 a 22 oct", "dot": "n"}, {"n": "Dexstand / Dale", "t": "Responder sus 3 preguntas (Calendly/Zoom) y confirmar provisioning", "tags": [], "m": "Desde el 22 oct", "dot": "n"}]}], "DRY": [["AAAHAR", "C1 CA + VL · C2 VL", "23 sep", "La más vieja"], ["Ifrate", "C2 CA + VL", "23 sep", ""], ["Rivalmind", "C1 CA + VL", "23 sep", "Cuenta muerta · sub viva"], ["Titan", "C1 CA + VL", "23 sep", "LL nueva aprobada, sin cargar"], ["Zolaterra", "C#1 + C#3 (CA+VL)", "23 a 27 sep", ""], ["BPI", "Todas (4 campañas)", "29 sep a 8 oct", "Lane de cancel · sin fuel"], ["HVO", "C1 CA NEW", "1 oct", "VL con runway"], ["Cinn Barr", "C1 CA", "2 oct", ""], ["ESC", "C1 VL", "6 oct", ""], ["Paper Pro", "C2 CA + VL", "7 oct · VL re-seca 27 oct", ""], ["Wisteria", "C1 CA + VL", "9 a 15 oct", "Lane de cancel"], ["CheckPlus", "C1 Valid", "16 oct", "Catch-all sano (490)"], ["Labot", "C1 CA + VL", "16 oct", "Nunca se llenó · deadline 31 oct"], ["NorthStar", "C1 VL", "16 oct", "CA sana (150)"], ["Seaside", "C1 CA", "19 oct", "VL viva (936)"], ["Digitek", "C1 CA", "22 oct", "VL viva (175)"], ["DFS", "applicant-CA", "27 oct", "applicant-VL con restock (216)"], ["Tess Woods", "C1 CA + VL", "27 oct", "Ambas secas · pool agotado"], ["Closer", "C1 CA + VL", "—", "0 pending pero sigue enviando"]], "CONFIRM": ["Closer: el Billing Review dice cargo el jue 29; el Command Center dice mié 28 a las 19:21 UTC. Aquí se usa el 28.", "Check Plus: aparece como pagado, pero el Command Center lo marca PAST_DUE. Contacto: Asher en un Doc, Aaron en el otro.", "DFS: $1,250 sin pagar en el Billing Review, contra $2,500 en facturas abiertas en el Command Center.", "ETG: hay que mover el cobro al ~15 nov, pero Neil pidió pausa hasta enero."], "DONE": ["BDM $800 y Cinn Barr $1,000 verificados como pagados (Stripe, 26 oct)", "TCR / Kevin Chan interesado vía la SDR Nina", "Restock de Central Tape verificado · Digitek recuperado", "Firewall de ETG desbloqueado", "Llamada con Theo realizada"], "GROUPS": [{"id": "mes", "name": "Actuar este mes", "dot": "r", "rows": [{"c": "HVO", "w": "Ari", "mrr": "—", "todo": "Sub stays ACTIVE (not cancelled). Oct 20 did NOT charge — invoice VOID, API-verified Oct 23. Next charge: Nov 20. ⚠️ Flag on record: non-renewal Sep 8 ended the contract ~Oct 8. The Nov 20 charge needs client consent on record (confirm with Mireya) — otherwise it's billing a dead contract.", "due": "", "owe": 0, "done": true}, {"c": "S.W. Chemilab", "w": "Scarlet", "mrr": "—", "todo": "Sub cancelled by Tani before the Oct 15 charge. Nothing more bills. If the Aug 15 $1,000 dispute arrives, let it run and accept (Oct 2 ruling).", "due": "2026-10-15", "owe": 0, "done": true}, {"c": "Closer Design", "w": "Juan", "mrr": "—", "todo": "Non-renewal notice Aug 31 → contract died Sep 30. Sep 29 was the last valid payment; the Oct 29 charge must never run. Reminder armed Oct 26.", "due": "2026-10-29", "owe": 0, "done": false}, {"c": "Rivalmind", "w": "Matt", "mrr": "—", "todo": "Sub cancelled before the Oct 15 charge. Open (Tani's call): Sep 15 $1,100 collected 2 days before Matt's Sep 17 written cancellation — credit/refund conversation.", "due": "2026-10-15", "owe": 0, "done": true}, {"c": "Zolaterra", "w": "Brodie", "mrr": "—", "todo": "Sub cancelled ✅ (verified Oct 8 — nothing charges). Refund $1,250 (the invalid Aug 14 charge) pending execution — Tani's motion.", "due": "", "owe": 1250, "done": false}, {"c": "Check Plus", "w": "Asher", "mrr": "—", "todo": "(API-verified Oct 23) Sep invoice $1,000 paid=True. Next invoice Oct 24 runs normally.", "due": "2026-10-23", "owe": 0, "done": true}, {"c": "DFS Interpreting", "w": "Dave", "mrr": "—", "todo": "Sep $1,250 unpaid. Failed Sep 9, Oct 1, Oct 7, Oct 9 (\"Do not honor\" — bank declines, card itself fine). Needs a working card or payment link.", "due": "", "owe": 0, "done": false}, {"c": "LabotBiank", "w": "Randall", "mrr": "—", "todo": "Green light given Oct 2. SOW ties the 2nd payment (Oct 31) to official campaign launch — launch validates the charge.", "due": "2026-10-31", "owe": 0, "done": false}, {"c": "Purple Brain", "w": "", "mrr": "—", "todo": "$50 → $1,000 Relaunching. The Oct 30 charge still runs $50 until the MRR is raised in Stripe. Wizard shows $100 — Tani correcting.", "due": "", "owe": 0, "done": false}, {"c": "BDM Tax", "w": "", "mrr": "—", "todo": "Tani's boss ruling: NO billing move — Oct 24 $800 charges normally. Remedy to the client = offer prospects. API-verified: sub active, 2/2 payments clean.", "due": "", "owe": 0, "done": true}, {"c": "ETG", "w": "Neil Kelley", "mrr": "—", "todo": "→ ~NOV 15 Service launched Oct 5; billing must shift +15 days to match launch. $1,200/mo verified (not $1,500 — that's the leads commitment). Reminder armed Oct 28.", "due": "2026-11-15", "owe": 0, "done": false}, {"c": "Chorus", "w": "Clint", "mrr": "—", "todo": "Keep the $100 pause fee, or cancel. 3M SOW ended ~Sep 30 with NO auto-renewal — the sub is charging with no contract behind it. If Clint signals out or threatens a dispute → cancel immediately. Reminder armed Oct 27.", "due": "2026-10-30", "owe": 0, "done": false}]}, {"id": "esp", "name": "Caso especial", "dot": "r", "rows": [{"c": "TCR", "w": "Tasha/Josh — Ancaster Food Equipment", "mrr": "—", "todo": "ACTIVE CHARGEBACK, confirmed by Tani Oct 2. Evidence ready: Deck 1 (communication report, 22pp), Deck 2 (PIQ work evidence), Gmail corpus PDF (141 msgs, Feb 2–Oct 1, 181pp) + screenshot pack (24 captures). Lead deliveries ~19,030 records. NPS 2. Nothing goes to the client or the bank without Tani's explicit approval.", "due": "2026-10-02", "owe": 0, "done": false}, {"c": "Range Data", "w": "Jack Mihelich", "mrr": "—", "todo": "🟡 dispute + resolution plan in progress. Stripe: 6 successful charges = $9,000 (Apr–Sep); Jul 1 + Sep 15 invoices cancelled. Next Oct 30 $1,500 must NOT run. Plan: refund Sep 30 $1,500 (Tani approval) → 1 month free → +500 goodwill leads → new targeted list (Gov Administration / Public Works / Water & Wastewater) → campaign 6→4 steps → run the month → cancel after → communicate clearly to Jack. Note: \"5 months paid\" in notes vs 6 in Stripe — reconcile before refunding.", "due": "2026-10-30", "owe": 1500, "done": false}]}, {"id": "res", "name": "Por resolver", "dot": "a", "rows": [{"c": "CP&P Development", "w": "", "mrr": "—", "todo": "fill FM row or drop client? (Tani investigating)", "due": "", "owe": 0, "done": false}, {"c": "Ifrate", "w": "Dave", "mrr": "—", "todo": "FM says 12M, SOW says 3M — which cadence stands? Resolve at renewal talk.", "due": "", "owe": 0, "done": false}, {"c": "Living Medicine", "w": "Sandy", "mrr": "—", "todo": "ask Mireya for the SOW ($800 confirmed via Stripe; Aug/Sep voided per agreement).", "due": "", "owe": 0, "done": false}, {"c": "Titan Billing", "w": "Raman", "mrr": "—", "todo": "ask Mireya for the Stripe customer link (not found in our account; may bill elsewhere).", "due": "", "owe": 0, "done": false}]}, {"id": "act", "name": "Activo", "dot": "g", "rows": [{"c": "BPI System", "w": "Chris", "mrr": "—", "todo": "$1,500, day 29 — rate per Tani ruling (SOW paper outdated).", "due": "", "owe": 0, "done": false}, {"c": "Digitek", "w": "Jinder", "mrr": "—", "todo": "$800, day 29 — bills on the Wishpond Stripe account (worth confirming why).", "due": "", "owe": 0, "done": false}, {"c": "Wisteria", "w": "Scott", "mrr": "—", "todo": "$1,200, day 30 — silent renewal, no complaints; meeting booked Oct 6.", "due": "", "owe": 0, "done": false}, {"c": "Ifrate", "w": "Dave", "mrr": "—", "todo": "$1,000, day 15 — watch: only 104 sends vs 1,000 promised; possible double pay (late Sep).", "due": "", "owe": 0, "done": false}, {"c": "Cinn Barr", "w": "Theo", "mrr": "—", "todo": "$1,000, day 24 — 3/3 payments clean; auto-renewed cycle Oct 22 → Jan 22 2027. Charging today Oct 24.", "due": "", "owe": 0, "done": false}, {"c": "Living Medicine", "w": "Sandy", "mrr": "—", "todo": "$800, day 31 — Aug + Sep voided per agreement; dunning pause lifted Oct 3.", "due": "", "owe": 0, "done": false}, {"c": "Central Tape", "w": "Gwen", "mrr": "—", "todo": "$1,450, day 29 — 3/3 clean; 6M term → Jan 29 2027 (nearest cliff).", "due": "", "owe": 0, "done": false}, {"c": "Tess Woods", "w": "Tess", "mrr": "—", "todo": "$1,500, day 16 — 📌 billing-cycle double: Sep paid late (23rd) + Oct 16 on time = TWO legitimate payments this 17th-17th cycle. API-verified: exactly ONE $1,500 invoice per month — no duplicate. Info only, not an overcharge.", "due": "", "owe": 0, "done": false}, {"c": "NorthStar ATM", "w": "Jerry", "mrr": "—", "todo": "$800, day 6 — confirm Jerry's notice status.", "due": "", "owe": 0, "done": false}, {"c": "ESC", "w": "Dewayne", "mrr": "—", "todo": "$750, day 8 — ⚠️ NO Stripe customer found; FM link points to DFS's customer (wrong). Billing method unknown — locate the real billing.", "due": "", "owe": 0, "done": false}, {"c": "Seaside", "w": "Mark", "mrr": "—", "todo": "$1,000, day 24 — 3rd/last payment today Oct 24; contract dies by itself after (no auto-renewal).", "due": "", "owe": 0, "done": false}, {"c": "ETG", "w": "Neil", "mrr": "—", "todo": "$1,200, day 31 — 2/2 clean; billing moves +15d (Act #11).", "due": "", "owe": 0, "done": false}, {"c": "Check Plus", "w": "Asher", "mrr": "—", "todo": "$1,000, day 24 — Sep verified paid; next invoice Oct 24.", "due": "", "owe": 0, "done": false}]}, {"id": "pau", "name": "Pausa con fee", "dot": "g", "rows": [{"c": "Athletic Wear", "w": "Todd", "mrr": "—", "todo": "$100 CAD, day 16 — clean since ~Mar (7+ payments). No ruling needed.", "due": "", "owe": 0, "done": false}, {"c": "Purple Brain", "w": "", "mrr": "—", "todo": "$50, day 31 — relaunching (Act #9: MRR → $1,000).", "due": "", "owe": 0, "done": false}, {"c": "Chorus", "w": "Clint", "mrr": "—", "todo": "$100, day 30 — 🔴 decision due Oct 30 (Act #12).", "due": "", "owe": 0, "done": false}, {"c": "CV Consulting", "w": "Chris", "mrr": "—", "todo": "fee not verified, day 15 — leave as is (Oct 2 ruling). Verify whether the sub still charges during pause.", "due": "", "owe": 0, "done": false}, {"c": "Zolaterra", "w": "Brodie", "mrr": "—", "todo": "day 9 — full cancellation + refund (Act #5).", "due": "", "owe": 1250, "done": false}]}, {"id": "dun", "name": "Dunning", "dot": "g", "rows": [{"c": "Purox Klean", "w": "Agha", "mrr": "—", "todo": "1 payment ever; 4+ failed attempts, blocked by Radar.", "due": "", "owe": 0, "done": false}, {"c": "Good Technology", "w": "Austen", "mrr": "—", "todo": "paid 6/6 then card died; temp email, unreachable. Sub should have auto-cancelled after Oct 10.", "due": "2026-10-10", "owe": 0, "done": false}, {"c": "MPDS", "w": "", "mrr": "—", "todo": "2 failed attempts Oct 1 ($1,450); billing-gap anomaly (no Aug/Sep invoices); no SOW in Drive.", "due": "2026-10-01", "owe": 0, "done": false}, {"c": "Sanne", "w": "Samuel", "mrr": "—", "todo": "card authorization REVOKED (Oct 8); retries will keep failing; a payment link would need a new card anyway. If any of these pay during dunning, great — otherwise mark Offboarding/Churned when Stripe cancels.", "due": "2026-10-08", "owe": 0, "done": false}]}, {"id": "cer", "name": "Cerrado", "dot": "g", "rows": [{"c": "Plug Talent", "w": "Lucas", "mrr": "—", "todo": "sub cancelled; $3,000 lifetime over 3 payments; no debts either direction.", "due": "", "owe": 0, "done": false}, {"c": "Palette Panda", "w": "", "mrr": "—", "todo": "sub cancelled; $3,000 CAD via manual out-of-band payments.", "due": "", "owe": 0, "done": false}, {"c": "S.W. Chemilab", "w": "Scarlet", "mrr": "—", "todo": "cancelled Oct 9 before the Oct 15 charge.", "due": "2026-10-09", "owe": 0, "done": false}]}], "next": {"intro": "Ronda del día · cuatro movimientos, en orden:", "items": ["Urgente: los 3 dineros (Closer cancel · Motif refund · CTL confirmación) — ciérralos en el AM Sync de 12:00", "Billing: CheckPlus link de pago $1,000 (sub past_due, Aaron ya nudged 2 veces)", "ETG / Neil: responder su pausa hasta enero + resend de la first-batch list", "El resto fluye en el dashboard: tacha lo que hagas y yo lo cruzo al Doc ✨"]}};</script>
+<script>
+(function(){
+const AGENTS=[
+ {id:"elo",   name:"🗝 Elowen", url:"https://app.jackhamr.ai/u/0/agents/3d1041d2-640c-4218-b623-ddc931b28d11?session=f342b806-3303-4dc0-8dfa-a6bedc3b2c1b"},
+ {id:"rook",  name:"🐦 Rook",   url:"https://app.jackhamr.ai/u/0/agents/204dbc52-4444-4cd4-ac4b-5bb94eaae5dc"},
+ {id:"puck",  name:"🍄 Puck",   url:"https://app.jackhamr.ai/u/0/agents/6e960abc-ddf2-4aee-a947-2956d79722f9"},
+ {id:"atlas", name:"🛠 Atlas",  url:"https://app.jackhamr.ai/u/0/agents/2700719d-e82d-4f24-98b4-97d5ce24e87f?session=16b5bdad-e272-4d7b-8150-e28d83c58110"},
+ {id:"cypher",name:"🧬 Cypher", url:"https://app.jackhamr.ai/u/0/agents/94001c2c-9dde-469b-ae60-51c49c2272c0?session=d6a20b38-d1c0-49bc-96df-b735a40602e0"}
+];
+function openAgent(id){
+  const a=AGENTS.find(x=>x.id===id); if(!a) return;
+  document.querySelectorAll("#agentBar button").forEach(b=>b.classList.toggle("on",b.dataset.agent===id));
+  const fr=document.getElementById("chatFrame"), fail=document.getElementById("frameFail");
+  fail.style.display="none";
+  document.getElementById("ffName").textContent=a.name+" no se pudo embeber";
+  fr.src=a.url;
+  clearTimeout(window.__frameTO);
+  window.__frameTO=setTimeout(()=>{ // if it can't load (no Luma extension), show fallback after 3.5s
+    try{ if(!fr.contentWindow || !fr.contentWindow.length===undefined){} }catch(e){}
+    fail.style.display="flex";
+  },3500);
+}
+window.__agentsReady=true;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const MON=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const day=s=>new Date(s.length===10?s+"T12:00":s);
+const fmt=d=>d.getDate()+" "+MON[d.getMonth()];
+const dayDiff=iso=>{const p=iso.split("-");const n=new Date();
+  return Math.round((Date.UTC(+p[0],+p[1]-1,+p[2])-Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()))/864e5)};
+const KEY="wcc-marks-v2";
+const S=window.__S=Object.assign({done:{},camp:{},up:{},notes:[]},JSON.parse(localStorage.getItem(KEY)||"{}"));
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+let D=null,F="all",Q="",BRIEF={},NOTIFS={};
+/* CANAL ÚNICO: todo evento va SOLO al buzón de Elowen en este servidor (mismo origen /event).
+   Ningún otro agente, chat o destino recibe nada de esta página. */
+const ELOWEN_INBOX = "/event";
+function _sync(ev){ try{
+    fetch(ELOWEN_INBOX,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(ev),keepalive:true}).catch(()=>{});
+  }catch(e){} }
+
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
+  ["brief","tasks","camp","billing","notifs","notes","agents"].forEach(v=>$("#view-"+v).classList.toggle("hide",v!==t.dataset.v));
+  if(t.dataset.v==="agents") initAgents();
+}));
+
+function taskRow(it){
+  const dn=S.done[it._id]??it.done;
+  const dot=it.dot==="r"?"r":it.dot==="a"?"a":"g";
+  const grp = dot==="r" ? "r" : (dot==="g" ? "g" : "a");
+  if(F!=="all"&&grp!==F) return "";
+  if(Q&&!(it.n+" "+it.t+" "+(it.m||"")).toLowerCase().includes(Q)) return "";
+  let age="";
+  if(!dn && it.since){ const a=Math.round((Date.now()-day(it.since))/864e5);
+    if(a>=5) age=` <span class="due ${a>=10?"late":"soon"}">hace ${a}d</span>`; }
+  const body=it.t.replace(new RegExp("^"+it.n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s*[:—-]?\\s*"),"");
+  return `<div class="task ${dn?"done":""}"><input type="checkbox" data-id="${it._id}" ${dn?"checked":""}>
+    <span class="dot ${dot}"></span><div><div class="who">${esc(it.n)}${age}</div>
+    <div class="what">${esc(body||it.t)}</div>${it.m?`<div class="meta">${esc(it.m)}</div>`:""}</div></div>`;
+}
+
+function renderTasks(){
+  const TS=D.TASK_SECTIONS||[];
+  let open=0,red=0,done=0,total=0;
+  TS.forEach(sec=>sec.items.forEach((it,i)=>{ total++; const _id=sec.id+i;
+    const dn=S.done[_id]??it.done; if(dn)done++; else{open++; if(it.dot==="r")red++;} }));
+  $("#k-r").textContent=red; $("#k-a").textContent=open-red; $("#k-camp").textContent=(D.DRY||[]).length;
+  $("#k-done").textContent=done; $("#k-bar").style.width=(total?done/total*100:0)+"%";
+  $("#nT").textContent=open;
+  const LABEL={urg:"🔴 Urgente: dinero",esc:"⚠️ Escalations abiertas",hoy:"🟡 Hoy: fast wins",deb:"📋 Tasks · después de las meetings",arr:"🌾 Arrastradas"};
+  const FSEL={all:()=>true, r:it=>it.dot==="r"&&!(S.done[it._id]??it.done), a:it=>it.dot!=="r"&&it.dot!=="g"&&!(S.done[it._id]??it.done), g:it=>it.dot==="g"&&!(S.done[it._id]??it.done), open:it=>!(S.done[it._id]??it.done)};
+  const fsel=FSEL[F]||FSEL.all;
+  $("#sections").innerHTML=TS.map(sec=>{
+    const all=sec.items.map((it,i)=>Object.assign({},it,{_id:sec.id+i}));
+    const items=all.filter(fsel);
+    const op=all.filter(it=>!(S.done[it._id]??it.done)).length;
+    const openSec = S.secOpen===undefined ? true : S.secOpen[sec.id]!==false;
+    if(!items.length && F!=="all") return "";  // filter active: hide empty sections
+    return `<div class="sec"><details ${openSec?"open":""} data-sec="${sec.id}"><summary><h2>${esc(LABEL[sec.id]||sec.title)} <span class="c">${op} abiertas</span></h2></summary>${items.map(taskRow).join("")||'<div class="hint">Nada aquí 🌿</div>'}</details></div>`;
+  }).join("");
+  document.querySelectorAll('#sections details[data-sec]').forEach(d=>{
+    d.addEventListener("toggle",()=>{ S.secOpen=S.secOpen||{}; S.secOpen[d.dataset.sec]=d.open; save(); });
+  });
+  // rook/puck lanes mini-sec
+  const lanes=(D.TASK_SECTIONS||[]).filter(s=>s.id==="lane");
+  if(lanes.length){ $("#sections").innerHTML+=lanes.map(s=>`<div class="sec"><h2>${esc(s.title)} <span class="c">${s.items.filter((it,i)=>!(S.done[s.id+i]??it.done)).length} abiertas</span></h2>${s.items.map((it,i)=>taskRow(Object.assign({},it,{_id:s.id+i}))).join("")}</div>`).join(""); }
+}
+
+function renderCamp(){
+  const dry=D.DRY||[];
+  const up=dry.filter((r,i)=>S.up["u"+i]).length;
+  const rev=dry.filter((r,i)=>S.camp["c"+i]).length;
+  $("#kc-open").textContent=dry.length-Math.max(up,rev); $("#kc-up").textContent=up; $("#kc-rev").textContent=rev;
+  $("#campCount").textContent=dry.length+" lanes · "+new Set(dry.map(r=>r[0])).size+" clientes";
+  $("#nC").textContent=dry.length-Math.max(up,rev);
+  $("#dry").innerHTML=`<thead><tr><th style="width:64px">Revisé</th><th style="width:64px">⬆ Subí</th><th>Cliente</th><th>Lanes</th><th>1ª alerta</th><th>Nota</th></tr></thead><tbody>`+
+    dry.map((r,i)=>{
+      const dn=S.camp["c"+i], u=S.up["u"+i];
+      return `<tr class="${dn?"done":""}"><td><input type="checkbox" data-camp="${i}" ${dn?"checked":""} title="Revisada (cliente cancelado o sin acción)"></td>
+        <td><input type="checkbox" data-up="${i}" ${u?"checked":""} title="Ya subí prospectos"></td>
+        <td class="cli"><b>${esc(r[0])}</b>${u?'<span class="upl">SUBÍ</span>':""}</td>
+        <td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3]||"")}</td></tr>`;
+    }).join("")+`</tbody>`;
+}
+
+function renderNotifs(){
+  const cards=(NOTIFS&&NOTIFS.cards)||[];
+  const acked=cards.filter(c=>S.notif&&S.notif[c.id]).length;
+  $("#nNf").textContent=cards.length-acked||"";
+  $("#kn-r").textContent=cards.length-acked; $("#kn-g").textContent=acked; $("#kn-t").textContent=cards.length;
+  $("#notifList").innerHTML=cards.map(c=>{
+    const done=S.notif&&S.notif[c.id];
+    return `<div class="sec wide notif ${done?'ack':''}" style="margin:0 0 10px;padding:12px 16px;border-left:4px solid ${c.kind==='launch'?'#d64545':c.kind==='stall'?'#e0a800':'#7c5cff'};background:linear-gradient(180deg,#faf8ff,#fff)">
+      <h2 style="margin:0 0 6px">${esc(c.title)} ${done?'<span class="c">✓ revisado</span>':""}</h2>
+      <div style="white-space:pre-wrap;font-size:13.5px;color:var(--muted);line-height:1.5">${esc(c.body)}</div>
+      <div style="margin-top:8px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)">
+        <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-notif="${c.id}" ${done?"checked":""}> Lo revisé</label>
+        ${c.next_run?`<span>· próxima corrida: ${esc(c.next_run)}</span>`:""}
+      </div>
+    </div>`;
+  }).join("")||'<div class="hint">Silencio 🌿 la última corrida salió limpia.</div>';
+}
+
+function mdLite(t){
+  const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  let html="", inList=null;
+  const lines=String(t).split("\n");
+  for(let raw of lines){
+    let line=raw.trimEnd();
+    const closeList=()=>{ if(inList){html+="</"+inList+">"; inList=null;} };
+    if(!line.trim()){ closeList(); continue; }
+    if(/^---+$/.test(line.trim())){ closeList(); html+="<hr>"; continue; }
+    let m=line.match(/^(#{1,3})\s+(.*)$/);
+    if(m){ closeList(); const lvl=m[1].length; html+=`<h${lvl}>${inline(m[2])}</h${lvl}>`; continue; }
+    m=line.match(/^[-*]\s+(.*)$/);
+    if(m){ if(inList!=="ul"){ closeList(); html+="<ul>"; inList="ul"; } html+=`<li>${inline(m[1])}</li>`; continue; }
+    m=line.match(/^\d+\.\s+(.*)$/);
+    if(m){ if(inList!=="ol"){ closeList(); html+="<ol>"; inList="ol"; } html+=`<li>${inline(m[1])}</li>`; continue; }
+    closeList(); html+=`<p>${inline(line)}</p>`;
+  }
+  if(inList) html+="</"+inList+">";
+  function inline(s){
+    return esc(s).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/(?<!\*)\*([^*\s][^*]*)\*(?!\*)/g,"<i>$1</i>");
+  }
+  return html;
+}
+
+function srow(x){
+  const id=x.id||("db"+(x.t||"").slice(0,20));
+  const dn=!!(S.done&&S.done[id]);
+  return `<div class="task ${dn?"done":""}"><input type="checkbox" data-id="${id}" ${dn?"checked":""}>
+    <span class="dot a"></span><div><div class="what">${esc(x.t||x)}</div>${x.m?`<div class="meta">${esc(x.m)}</div>`:""}</div></div>`;
+}
+function renderBrief(){
+  const B = BRIEF || {};
+  const debriefs = B.pending_debriefs || [];
+  $("#nBr").textContent = debriefs.length || "";
+  $("#brKpis").innerHTML = [[debriefs.length,"🎙️ por capturar","m"]].map(k=>`<div class="kpi ${k[2]}"><div class="n">${k[0]}</div><div class="t">${k[1]}</div></div>`).join("");
+  if(B.note){ $("#briefNote").style.display=""; $("#briefNote").innerHTML = mdLite(B.note) + (B.note_date? '<div class="stamp">— '+esc(B.note_date)+'</div>' : ''); }
+  else { $("#briefNote").style.display="none"; }
+  $("#dbList").innerHTML = debriefs.map(x=>srow(x)).join("") || '<div class="hint">Vacío por ahora · lo lleno cuando me lo pidas en el chat.</div>';
+}
+
+
+function renderBilling(){
+  const rows=[];
+  (D.GROUPS||[]).forEach(g=>g.rows.forEach(r=>{ if(r.due&&g.id!=="dun"&&g.id!=="cer") rows.push(Object.assign({},r,{_id:"b-"+g.id+"-"+r.c})); }));
+  rows.sort((a,b)=>a.due<b.due?-1:1);
+  const dated=rows.filter(r=>!(S.done[r._id]??r.done));
+  const late=dated.filter(r=>dayDiff(r.due)<0).length, soon=dated.filter(r=>dayDiff(r.due)>=0&&dayDiff(r.due)<=7).length;
+  const owe=(D.GROUPS||[]).reduce((a,g)=>a+g.rows.reduce((x,r)=>x+(r.owe||0),0),0);
+  $("#bKpis").innerHTML=[[late,"⏰ vencidas","r"],[soon,"📅 vencen en 7d","a"],[dated.length,"📊 con fecha","m"]]
+    .map(k=>`<div class="kpi ${k[2]}"><div class="n">${k[0]}</div><div class="t">${k[1]}</div></div>`).join("")+
+    `<div class="kpi g"><div class="n">$${owe.toLocaleString("en-US")}</div><div class="t">💸 reembolsos</div></div>`;
+  $("#bCount").textContent=dated.length+" abiertas";
+  $("#nB").textContent=dated.filter(r=>dayDiff(r.due)<=7).length;
+  $("#bList").innerHTML=dated.slice(0,18).map(r=>{
+    const d=dayDiff(r.due);
+    const lab=d<0?`vencido ${-d}d`:d===0?"hoy":d===1?"mañana":fmt(day(r.due));
+    const cls=d<0?"late":d<=7?"soon":"ok";
+    return `<div class="task ${S.done[r._id]?"done":""}"><input type="checkbox" data-id="${r._id}" ${S.done[r._id]?"checked":""}>
+      <span class="dot ${d<0?"r":d<=7?"a":"g"}"></span><div><div class="who">${esc(r.c)} ${r.w?"· "+esc(r.w):""} <span class="due ${cls}">${lab}</span></div>
+      <div class="what">${esc(r.todo)}</div></div></div>`;
+  }).join("")||'<div class="hint">Nada en el radar 🌿</div>';
+  const B2 = BRIEF || {}, dbs = B2.pending_debriefs || [];
+  const dbId=x=>(x.id||("db-"+(x.c||x.t||"").toLowerCase().replace(/[^a-z0-9]+/g,"-")));
+  $("#dbList").innerHTML = dbs.map(x=>{
+    const id=dbId(x), dn=S.done[id];
+    return `<div class="task briefRow ${dn?"done":""}"><input type="checkbox" data-id="${id}" ${dn?"checked":""}>
+      <div><div class="what"><b>${esc(x.c||x.client||"")}</b>${x.t?" — "+esc(x.t):x.meeting?" — "+esc(x.meeting):""}</div>
+      <div class="meta">${esc(x.d||x.date||"")} <span class="xref">↔ cross-ref: Doc</span></div></div></div>`;
+  }).join("") || '<div class="hint">Todo capturado 🌿</div>';
+}
+
+let __agentsInit=false;
+function initAgents(){
+  if(__agentsInit) return; __agentsInit=true;
+  const bar=document.getElementById("agentBar");
+  bar.innerHTML=AGENTS.map(a=>`<button data-agent="${a.id}" onclick="openAgent('${a.id}')">${a.name}</button>`).join("");
+  // detect real load vs blocked frame
+  const fr=document.getElementById("chatFrame");
+  fr.addEventListener("load",()=>{
+    clearTimeout(window.__frameTO);
+    let real=true;
+    try{ const d=fr.contentDocument; if(!d || !d.body || d.body.childElementCount===0) real=false; }catch(e){ real=true; } // cross-origin = loaded fine
+    document.getElementById("frameFail").style.display = real ? "none" : "flex";
+  });
+  fr.addEventListener("error",()=>{ document.getElementById("frameFail").style.display="flex"; });
+  document.getElementById("ffLinks").innerHTML=AGENTS.map(a=>`<a href="${a.url}" target="_blank" rel="noopener" style="font:inherit;font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--ink)">${a.name} ↗</a>`).join("");
+  openAgent("elo");
+}
+
+function renderNotes(){
+  const S=window.__S; if(!S) return;
+  const open=S.notes||[];
+  $("#nN").textContent=open.length||"";
+  // "+ nueva" card always first, then existing notes
+  const cards = [`<div class="noteCard new" style="background:#fffdf8;border:1.5px dashed var(--line);box-shadow:none;cursor:pointer;min-height:120px;display:grid;place-items:center;color:var(--muted);font-size:14px" id="newNote">+ pega una nota</div>`]
+    .concat(open.slice().reverse().map((n,i)=>noteCard(n)));
+  $("#notesGrid").innerHTML=cards.join("");
+  bindSticky();
+}
+function noteCard(n,i){
+  const cls="n"+(i%5);
+  return `<div class="noteCard ${cls}" data-note="${n.id}">
+    <input class="ttl" placeholder="Título…" value="${esc(n.title||"")}" data-ttl="${n.id}">
+    <div class="txt" contenteditable="true" data-txt="${n.id}">${esc(n.text||"")}</div>
+    <div class="when">${esc(n.at)}</div>
+    <button class="pin" data-pin="${n.id}" title="Borrar nota">✕</button></div>`;
+}
+function bindSticky(){
+  const nn=$("#newNote"); if(nn) nn.onclick=()=>{ addNoteSticky(); };
+  document.querySelectorAll("#notesGrid [data-ttl]").forEach(el=>{
+    el.addEventListener("input",()=>{ const n=S.notes.find(x=>x.id===el.dataset.ttl); if(n){ n.title=el.value; save(); } });
+  });
+  document.querySelectorAll("#notesGrid [data-txt]").forEach(el=>{
+    el.addEventListener("input",()=>{ const n=S.notes.find(x=>x.id===el.dataset.txt); if(n){ n.text=el.innerText; save(); } });
+  });
+}
+function addNoteSticky(){
+  const now=new Date();
+  const at=now.toLocaleDateString("es-MX",{day:"numeric",month:"short"})+" "+now.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+  S.notes.push({id:"n"+Date.now(), title:"", text:"", at}); save();
+  renderNotes();
+  const last=[...document.querySelectorAll("#notesGrid [data-txt]")].pop();
+  if(last){ last.focus(); const c=last.closest(".noteCard"); if(c) c.scrollIntoView({behavior:"smooth",block:"center"}); }
+}
+function render(){
+  if(!D) return;
+  $("#sub").textContent="Plan diario de Tani · datos vivos del Doc";
+  $("#footFresh").textContent="actualizado "+(D.snapshot?fmt(day(D.snapshot)):"");
+  const cal=(window.__CAL||[]).filter(e=>!e.past);
+  $("#dates").innerHTML=(cal.length?cal:(D.EVENTS||[]).map(e=>({when:e[0],title:e[1]}))).slice(0,6).map(e=>
+    `<div class="date"><b>${esc(e.when||e[0])}</b>${esc(e.title||e[1])}</div>`).join("");
+  $("#nextBox").innerHTML=`<div class="lbl">Siguiente paso →</div><div>${esc((D.next&&D.next.intro)||"")} <b>${esc(((D.next&&D.next.items)||[]).join(" · "))}</b></div>`;
+  renderNotifs(); renderTasks(); renderCamp(); renderBilling(); renderBrief(); renderNotes();
+}
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.notif!==undefined){
+    S.notif=S.notif||{};
+    if(t.checked) S.notif[t.dataset.notif]=true; else delete S.notif[t.dataset.notif];
+    save();
+    _sync({type:"notif_ack",id:t.dataset.notif,checked:t.checked});
+    renderNotifs(); return;
+  }
+  if(t.dataset.id){
+    S.done[t.dataset.id]=t.checked; if(!t.checked) delete S.done[t.dataset.id]; save();
+    let client="",what="";
+    for(const sec of (D.TASK_SECTIONS||[])){ const idx=+t.dataset.id.slice(sec.id.length);
+      if(t.dataset.id.startsWith(sec.id)&&sec.items[idx]){ client=sec.items[idx].n; what=sec.items[idx].t; } }
+    if(t.dataset.id.startsWith("b-")){ client=t.dataset.id.slice(2).split("-").slice(1).join("-"); what="billing"; }
+    _sync({type:"done",id:t.dataset.id,checked:t.checked,client,what}); render();
+  }
+  if(t.dataset.camp!==undefined){ S.camp["c"+t.dataset.camp]=t.checked; if(!t.checked) delete S.camp["c"+t.dataset.camp]; save();
+    _sync({type:"camp_reviewed", id:t.dataset.camp, client:(D.DRY||[])[+t.dataset.camp]?.[0]||"", checked:t.checked}); render(); }
+  if(t.dataset.up!==undefined){ S.up["u"+t.dataset.up]=t.checked; if(!t.checked) delete S.up["u"+t.dataset.up]; save();
+    _sync({type:"camp_uploaded", id:t.dataset.camp, client:(D.DRY||[])[+t.dataset.camp]?.[0]||"", checked:t.checked}); render(); }
+});
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-f]"); if(c){ F=c.dataset.f; document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===c)); renderTasks(); return; }
+  if(e.target.id==="campDone"){
+    if(S.campAlertSent){ e.target.textContent="✓ Ya avisé en esta sesión"; setTimeout(()=>{e.target.textContent="Avisar a Elowen (solo a mí, Elowen)";},2200); return; }
+    _sync({type:"camp_review",checked:Object.values(S.camp).filter(Boolean).length,uploaded:Object.values(S.up).filter(Boolean).length,note:"Revisé campañas y marqué prospectos subidos · revisa el billing y actualiza lo que ya hice"});
+    S.campAlertSent=true; save();
+    e.target.textContent="✓ Aviso enviado"; setTimeout(()=>{e.target.textContent="Avisar a Elowen (solo a mí, Elowen)";},2500);
+  }
+});
+$("#q").addEventListener("input",e=>{ Q=e.target.value.trim().toLowerCase(); renderTasks(); });
+document.addEventListener("click",e=>{
+  const pin=e.target.closest("[data-pin]"); if(!pin) return;
+  const idx=(S.notes||[]).findIndex(x=>x.id===pin.dataset.pin); if(idx<0) return;
+  S.notes.splice(idx,1); save();
+  renderNotes();
+});
+$("#chatToggle").onclick=()=>{ $("#composer").classList.toggle("hide"); if(!$("#composer").classList.contains("hide")) $("#say").focus(); };
+$("#send").onclick=()=>{ const v=$("#say").value.trim(); if(!v)return;
+  _sync({type:"chat",to:"elo",text:v}); $("#say").value=""; $("#say").placeholder="Enviado ✓ me llega al buzón"; };
+$("#say").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#send").onclick(); });
+
+function load(){
+  const jd=(window.__INJECT__DATA||null);
+  fetch("data.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{ D=j; render(); }).catch(()=>{ if(jd){ D=jd; render(); } });
+  fetch("brief.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():{}).then(b=>{ BRIEF=b; render(); }).catch(()=>{ if(window.__INJECT__BRIEFJ){ BRIEF=window.__INJECT__BRIEFJ; render(); } });
+  fetch("notifications.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():{}).then(n=>{ NOTIFS=n; render(); }).catch(()=>{ if(window.__INJECT__NOTIFJ){ NOTIFS=window.__INJECT__NOTIFJ; render(); } });
+  fetch("calendar.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():[]).then(c=>{ window.__CAL=c; render(); }).catch(()=>{ if(window.__INJECT__CAL){ window.__CAL=window.__INJECT__CAL; render(); } });
+}
+load(); setInterval(load,120000);
+
+
+})();
+</script>
+</body></html>
